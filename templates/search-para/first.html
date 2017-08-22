@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block search %}
+    <form class="form-inline">
+            <div class="form-group">
+                <label for="zone">Zone : </label>
+                <input type="text" class="form-control" id="zone">
+            </div>
+            <div class="form-group">
+                <label for="zone_code">Zone Code : </label>
+                <input type="text" class="form-control" id="zone_code">
+            </div>
+            <div class="form-group">
+                <label for="district">District : </label>
+                <input type="text" class="form-control" id="district">
+            </div>
+            <div class="form-group">
+                <label for="name">Name : </label>
+                <input type="text" class="form-control" id="name">
+            </div>
+            <div class="form-group">
+                <label for="keywords">Address Keywords : </label>
+                <input type="text" class="form-control" id="keywords">
+            </div>
+            <button id="button" type="submit" class="btn btn-success pull-right">Submit</button>
+        </form>
+
+
+{% endblock search %}
+
+{% block search_url %}
+    {% url 'es_search:search_view_first' %}
+
+{% endblock search_url%}
+
+{% block search_url2 %}
+    {% url 'es_search:search_view_first' %}
+
+{% endblock search_url2%}
+
+{% block csv_url %}
+    {% url 'es_search:csv_first' %}
+{% endblock csv_url%}

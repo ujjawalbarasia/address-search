@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block search %}
+    <form class="form-inline">
+            <div class="form-group">
+                <label for="keywords">Keywords : </label>
+                <input type="text" class="form-control" id="keywords">
+            </div>
+            <button id="button" type="submit" class="btn btn-success pull-right">Submit</button>
+        </form>
+
+
+{% endblock search %}
+
+{% block search_url %}
+    {% url 'es_search:search_view_second' %}
+
+{% endblock search_url%}
+
+{% block search_url2 %}
+    {% url 'es_search:search_view_second' %}
+{% endblock search_url2 %}
+{% block csv_url %}
+    {% url 'es_search:csv_second' %}
+{% endblock csv_url%}

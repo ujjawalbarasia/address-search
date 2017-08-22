@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TATA - Search</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style type="text/css">
+        .page_id_fetch{
+            padding:1px;
+            border:1px solid black;
+            margin:3px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">TPDDL</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="{% url 'es_search:first' %}">First</a></li>
+                <li><a href="{% url 'es_search:second' %}">Second</a></li>
+                <li><a href="{% url 'es_search:third' %}">Third</a></li>
+                <li><a href="{% url 'es_search:fourth' %}">Fourth</a></li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <div class=" pull-right" id="hits">
+                        <span class="label label-default">TOTAL HITS</span>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        {% block search %}
+
+        {% endblock search %}
+
+    </div>
+    <div id="download_button">
+
+        <a href="local"></a>
+
+    </div>
+    <div class="panel-body">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Match Score</th>
+                <th>District</th>
+                <th>Zone Code</th>
+                <th>Zone</th>
+                <th>Full name</th>
+                <th>vkont</th>
+                <th>instlion</th>
+                <th>Supply</th>
+                <th>Billing Address</th>
+            </tr>
+            </thead>
+            <tbody id="tbo">
+
+
+            </tbody>
+
+        </table>
+    </div>
+    <div id="pagination" class="container-fluid" style="width:100%; word-wrap: break-word;">
+    </div>
+    <div id="hidden_fields"></div>
+</div>
+</body>
+</html>
+
+<script>
+    $("#button").click(function (event) {
+        event.preventDefault();
+        var start=0;
+        var end=100;
+        $.get({
+            url:{% block search_url %}{% endblock search_url %},
+            data: {
+                zone: $("#zone").val(),
+                zone_code: $("#zone_code").val(),
+                district: $("#district").val(),
+                name: $("#name").val(),
+                keyword: $("#keywords").val()
+            },
+            success: function (result) {
+                $('#hidden_fields').attr('zone', $("#zone").val());
+                $('#hidden_fields').attr('zone_code', $("#zone_code").val());
+                $('#hidden_fields').attr('district', $("#district").val());
+                $('#hidden_fields').attr('name', $("#name").val());
+                $('#hidden_fields').attr('keyword', $("#keywords").val());
+                $("#download_button").html('<button id="downloadbutton" class="btn btn-success">Download as CSV</button>')
+                console.log(start,end);
+                var data = result.hits;
+                console.log(result);
+                var filler = "";
+                var results_to_show = Math.ceil(result.total) > 10000 ? 10000 : Math.ceil(result.total);
+                var per_page = 100;
+                var total_pages = Math.ceil(results_to_show/per_page);
+                console.log("ASDASDSADASDASSDA");
+                console.log(results_to_show,per_page,total_pages)
+                $("#pagination").html("");
+                for (var i = 0; i < data.length; i++) {
+                    filler += "<tr><td>" + (i + 1) +
+                            "</td><td>" + data[i]._score +
+                            "</td><td>" + data[i]._source.district +
+                            "</td><td>" + data[i]._source.zone_code +
+                            "</td><td>" + data[i]._source.zone +
+                            "</td><td>" + data[i]._source.full_name +
+                            "</td><td>" + data[i]._source.vkont +
+                            "</td><td>" + data[i]._source.instlion +
+                            "</td><td>" + data[i]._source.supply +
+                            "</td><td>" + data[i]._source.billing_address +
+                            "</td></tr>";
+                }
+                $("#tbo").html(filler);
+                var hits_html = '<span class="label label-default">TOTAL HITS :' + result.total + " </span>";
+                $("#hits").html(hits_html)
+
+                for(var i=0;i<total_pages;i++)
+                {
+                    if(i==0)
+                    {
+                        $("#pagination").append("<a class='page_id_fetch' data-start='"+(i)*per_page+"' data-end='" + ((i+1)*per_page) + "'>"+(i+1)+"</a>");
+                    }
+                    else if(i==total_pages-1)
+                    {
+                        $("#pagination").append("<a class='page_id_fetch' data-start='"+((i)*per_page+1)+"' data-end='" + result.total + "'>"+(i+1)+"</a>");
+                    }
+                    else{
+                        $("#pagination").append("<a class='page_id_fetch' data-start='"+((i)*per_page+1)+"' data-end='" + ((i+1)*per_page) + "'>"+(i+1)+"</a>");
+                    }
+                }
+            }
+        }).fail(
+                function (result) {
+                    var filler = "<tr><td><h2>No Data Found</h2></td></tr>";
+                    console.log(result);
+                    $("#tbo").html(filler);
+                    $("#hits").html('<span class="label label-default">TOTAL HITS</span>');
+                }
+        );
+    });
+    $(document).on('click','.page_id_fetch',function(){
+        start = $(this).data("start");
+        end = $(this).data("end");
+        console.log(start,end);
+        console.log($('#hidden_fields').attr("keyword"));
+        $.get({
+            url: {% block search_url2 %}{% endblock %} + "?start="+start+"&end="+end,
+            data: {
+                zone: $('#hidden_fields').attr("zone"),
+                zone_code: $('#hidden_fields').attr("zone_code"),
+                district: $('#hidden_fields').attr("district"),
+                name: $('#hidden_fields').attr("name"),
+                keyword: $('#hidden_fields').attr("keyword")
+            },
+            success: function (result) {
+                $('#hidden_fields').attr('zone', $("#zone").val());
+                $('#hidden_fields').attr('zone_code', $("#zone_code").val());
+                $('#hidden_fields').attr('district', $("#district").val());
+                $('#hidden_fields').attr('name', $("#name").val());
+                $('#hidden_fields').attr('keyword', $("#keywords").val());
+                var data = result.hits;
+                var filler = "";
+                for (var i = 0; i < data.length; i++) {
+                    filler += "<tr><td>" + (i + 1) +
+                        "</td><td>" + data[i]._score +
+                        "</td><td>" + data[i]._source.district +
+                        "</td><td>" + data[i]._source.zone_code +
+                        "</td><td>" + data[i]._source.zone +
+                        "</td><td>" + data[i]._source.full_name +
+                        "</td><td>" + data[i]._source.vkont +
+                        "</td><td>" + data[i]._source.instlion +
+                        "</td><td>" + data[i]._source.supply +
+                        "</td><td>" + data[i]._source.billing_address +
+                        "</td></tr>";
+                }
+                $("#tbo").html(filler);
+            }
+        });
+    });
+    $(document).on('click','#downloadbutton',function(){
+        var zone = $('#hidden_fields').attr("zone");
+        var zone_code = $('#hidden_fields').attr("zone_code");
+        var district = $('#hidden_fields').attr("district");
+        var name = $('#hidden_fields').attr("name");
+        var keyword = $('#hidden_fields').attr("keyword");
+        var url1 =  {% block csv_url%}{% endblock %}
+        var url =    url1 + "?zone="+zone+"&zone_code="+zone_code+"&district="+district+"&name="+name+"&keyword="+keyword
+        console.log(url);
+            $.get({
+            url: url1,
+            data: {
+                zone: $('#hidden_fields').attr("zone"),
+                zone_code: $('#hidden_fields').attr("zone_code"),
+                district: $('#hidden_fields').attr("district"),
+                name: $('#hidden_fields').attr("name"),
+                keyword: $('#hidden_fields').attr("keyword")
+            },
+            success: function(){
+                window.open(url, '_blank');
+            }
+            })
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var url = window.location;
+        $('ul.nav a[href="'+ url +'"]').parent().addClass('active');
+        $('ul.nav a').filter(function() {
+             return this.href == url;
+        }).parent().addClass('active');
+    });
+
+
+</script>
